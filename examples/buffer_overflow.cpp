@@ -7,17 +7,17 @@
  *   g++ -g -O0 -fno-stack-protector -o buffer_overflow buffer_overflow.cpp
  *
  * Debug:
- *   udb ./buffer_overflow
+ *   mdb ./buffer_overflow
  *
  * Session:
- *   (udb) run
- *   (udb) break copy     # break at function entry
- *   (udb) continue
- *   (udb) info locals    # watch buf[], i
- *   (udb) step           # step through the loop
- *   (udb) explain        # AI tells you when the overflow will happen
- *   (udb) watch buf[16]  # watchpoint on the byte past the end
- *   (udb) continue       # stop when corruption occurs
+ *   (mdb) run
+ *   (mdb) break copy     # break at function entry
+ *   (mdb) continue
+ *   (mdb) info locals    # watch buf[], i
+ *   (mdb) step           # step through the loop
+ *   (mdb) explain        # AI tells you when the overflow will happen
+ *   (mdb) watch buf[16]  # watchpoint on the byte past the end
+ *   (mdb) continue       # stop when corruption occurs
  */
 
 #include <iostream>

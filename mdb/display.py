@@ -1,5 +1,5 @@
 """
-Display: all terminal rendering for udb-cli.
+Display: all terminal rendering for mdb.
 Uses ANSI escape codes for colour; respects NO_COLOR env var.
 """
 

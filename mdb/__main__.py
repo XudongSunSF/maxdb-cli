@@ -1,4 +1,4 @@
-"""Entry point: python -m udb [binary] [options]"""
+"""Entry point: python -m mdb [binary] [options]"""
 
 import argparse
 import sys
@@ -9,21 +9,21 @@ from .config import Config
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="udb",
-        description="UDB — Time-Travel Debugger for C++ powered by Claude AI",
+        prog="mdb",
+        description="MDB — Time-Travel Debugger for C++ powered by Claude AI",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  udb ./my_binary
-  udb ./my_binary --rr
-  udb ./my_binary --api-key sk-ant-...
-  python -m udb ./my_binary
+  mdb ./my_binary
+  mdb ./my_binary --rr
+  mdb ./my_binary --api-key sk-ant-...
+  python -m mdb ./my_binary
 
 Environment variables:
   ANTHROPIC_API_KEY   Anthropic API key for 'explain' / 'why' command
-  UDB_USE_RR          Set to 1 to use rr instead of GDB record-full
-  UDB_CONTEXT_LINES   Number of source lines to show (default 10)
-  UDB_DEBUG           Set to 1 for verbose GDB/MI output
+  MDB_USE_RR          Set to 1 to use rr instead of GDB record-full
+  MDB_CONTEXT_LINES   Number of source lines to show (default 10)
+  MDB_DEBUG           Set to 1 for verbose GDB/MI output
 """,
     )
     parser.add_argument("binary", nargs="?", help="C++ binary to debug")
@@ -32,7 +32,7 @@ Environment variables:
     parser.add_argument("--context", type=int, default=10, metavar="N",
                         help="Source lines of context to show (default 10)")
     parser.add_argument("--debug", action="store_true", help="Show GDB/MI protocol traffic")
-    parser.add_argument("--version", action="version", version="udb 1.0.0")
+    parser.add_argument("--version", action="version", version="mdb 1.0.0")
 
     args = parser.parse_args()
 

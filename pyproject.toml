@@ -3,14 +3,14 @@ requires      = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.backends.legacy:build"
 
 [project]
-name        = "udb-cli"
+name        = "mdb"
 version     = "1.0.0"
-description = "Time-Travel Debugger CLI for C++ — powered by Claude AI"
+description = "MDB — MaxDebugger: Time-Travel Debugger for C++ powered by Claude AI"
 readme      = "README.md"
 requires-python = ">=3.11"
 
 authors = [
-  { name = "udb-cli contributors" },
+  { name = "mdb contributors" },
 ]
 
 keywords = [
@@ -42,11 +42,11 @@ dev = [
 ]
 
 [project.scripts]
-udb = "udb.__main__:main"
+mdb = "mdb.__main__:main"
 
 [project.urls]
-Homepage   = "https://github.com/XudongSunSF/udb-cli"
-Issues     = "https://github.com/XudongSunSF/udb-cli/issues"
+Homepage   = "https://github.com/XudongSunSF/mdb"
+Issues     = "https://github.com/XudongSunSF/mdb/issues"
 
 [tool.ruff]
 line-length = 100

@@ -1,4 +1,4 @@
-"""Configuration for udb-cli."""
+"""Configuration for mdb."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ class Config:
     syntax_highlight: bool = True
 
     # Session
-    history_file: str = "~/.udb_history"
+    history_file: str = "~/.mdb_history"
     debug: bool = False          # verbose GDB/MI logging
 
     # Backend
@@ -26,11 +26,11 @@ class Config:
     @classmethod
     def from_env(cls) -> "Config":
         cfg = cls()
-        if os.environ.get("UDB_DEBUG"):
+        if os.environ.get("MDB_DEBUG"):
             cfg.debug = True
-        if os.environ.get("UDB_USE_RR"):
+        if os.environ.get("MDB_USE_RR"):
             cfg.use_rr = True
-        if cl := os.environ.get("UDB_CONTEXT_LINES"):
+        if cl := os.environ.get("MDB_CONTEXT_LINES"):
             try:
                 cfg.context_lines = int(cl)
             except ValueError:

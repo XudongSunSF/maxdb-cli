@@ -1,5 +1,5 @@
 """
-udb-cli: Time-Travel Debugger CLI for C++ projects.
+mdb: Time-Travel Debugger CLI for C++ projects.
 Inspired by UndoDB/rr — powered by Claude AI.
 """
 
@@ -20,13 +20,13 @@ from .backend.rr import RRBackend
 from .config import Config
 
 BANNER = r"""
-  ██╗   ██╗██████╗ ██████╗
-  ██║   ██║██╔══██╗██╔══██╗
-  ██║   ██║██║  ██║██████╔╝
-  ██║   ██║██║  ██║██╔══██╗
-  ╚██████╔╝██████╔╝██████╔╝
-   ╚═════╝ ╚═════╝ ╚═════╝
-  Time-Travel Debugger  v1.0.0  (powered by Claude AI)
+  ███╗   ███╗██████╗ ██████╗
+  ████╗ ████║██╔══██╗██╔══██╗
+  ██╔████╔██║██║  ██║██████╔╝
+  ██║╚██╔╝██║██║  ██║██╔══██╗
+  ██║ ╚═╝ ██║██████╔╝██████╔╝
+  ╚═╝     ╚═╝╚═════╝ ╚═════╝
+  MaxDebugger  v1.0.0  (powered by Claude AI)
 """
 
 HELP_TEXT = """
@@ -119,7 +119,7 @@ class UDBCli:
 
         while True:
             try:
-                raw = input("\033[1;32m(udb)\033[0m ")
+                raw = input("\033[1;32m(mdb)\033[0m ")
             except (EOFError, KeyboardInterrupt):
                 print()
                 self._quit()
@@ -223,7 +223,7 @@ class UDBCli:
 
     def _run(self, args: str):
         if self.session is None:
-            self.display.warn("No program loaded. Usage: udb <binary>")
+            self.display.warn("No program loaded. Usage: mdb <binary>")
             return
         result = self.session.run(args)
         self.display.show_stop(result)

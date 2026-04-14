@@ -7,19 +7,19 @@
  * Compile:
  *   g++ -g -O0 -fsanitize=address -o use_after_free use_after_free.cpp
  *   # then debug with:
- *   udb ./use_after_free
+ *   mdb ./use_after_free
  *
  * Expected crash:
  *   SIGSEGV in delete_list() at line 21 (head = head->next after free)
  *
  * Time-travel session:
- *   (udb) run
- *   (udb) break 20        # break before delete
- *   (udb) continue
- *   (udb) step            # execute the delete
- *   (udb) step            # crash: use-after-free
- *   (udb) explain         # Claude AI root-cause analysis
- *   (udb) reverse-step    # step back to safe state
+ *   (mdb) run
+ *   (mdb) break 20        # break before delete
+ *   (mdb) continue
+ *   (mdb) step            # execute the delete
+ *   (mdb) step            # crash: use-after-free
+ *   (mdb) explain         # Claude AI root-cause analysis
+ *   (mdb) reverse-step    # step back to safe state
  */
 
 #include <iostream>

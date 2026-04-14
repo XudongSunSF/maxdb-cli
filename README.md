@@ -1,18 +1,18 @@
-# udb-cli — Time-Travel Debugger for C++
+# mdb — Time-Travel Debugger for C++
 
 > Debug large-scale C++ projects with full reverse execution and AI-powered root-cause analysis.
 
 ```
-  ██╗   ██╗██████╗ ██████╗
-  ██║   ██║██╔══██╗██╔══██╗
-  ██║   ██║██║  ██║██████╔╝
-  ██║   ██║██║  ██║██╔══██╗
-  ╚██████╔╝██████╔╝██████╔╝
-   ╚═════╝ ╚═════╝ ╚═════╝
-  Time-Travel Debugger  v1.0.0  (powered by Claude AI)
+  ███╗   ███╗██████╗ ██████╗
+  ████╗ ████║██╔══██╗██╔══██╗
+  ██╔████╔██║██║  ██║██████╔╝
+  ██║╚██╔╝██║██║  ██║██╔══██╗
+  ██║ ╚═╝ ██║██████╔╝██████╔╝
+  ╚═╝     ╚═╝╚═════╝ ╚═════╝
+  MaxDebugger  v1.0.0  (powered by Claude AI)
 ```
 
-**udb-cli** is an open-source command-line debugger inspired by [UndoDB](https://undo.io/)
+**mdb** is an open-source command-line debugger inspired by [UndoDB](https://undo.io/)
 and [Mozilla rr](https://rr-project.org/). It wraps GDB (or rr) to give you full
 reverse-execution of any C++ program, and integrates the **Claude AI** API to
 automatically explain crashes, use-after-free bugs, buffer overflows, and more.
@@ -65,13 +65,13 @@ brew install rr
 ## Installation
 
 ```bash
-pip install udb-cli
+pip install mdb
 ```
 
 Or from source:
 ```bash
-git clone https://github.com/XudongSunSF/udb-cli
-cd udb-cli
+git clone https://github.com/XudongSunSF/mdb
+cd mdb
 pip install -e .
 ```
 
@@ -83,32 +83,32 @@ pip install -e .
 # Compile your binary with debug symbols (no optimisation)
 g++ -g -O0 -o my_program my_program.cpp
 
-# Start udb
+# Start mdb
 export ANTHROPIC_API_KEY=sk-ant-...
-udb ./my_program
+mdb ./my_program
 ```
 
 ### Example session
 
 ```
-(udb) run
+(mdb) run
   ● Breakpoint 1, main() at my_program.cpp:42
 
-(udb) break delete_list
+(mdb) break delete_list
   ✔ Breakpoint 2 at delete_list
 
-(udb) continue
+(mdb) continue
   ● Breakpoint hit — delete_list() at use_after_free.cpp:20
 
-(udb) step
+(mdb) step
   ▸ delete_list() at use_after_free.cpp:21
 
-(udb) step
+(mdb) step
   ● SIGNAL RECEIVED: SIGSEGV
      delete_list() at use_after_free.cpp:21
   tip: type explain for AI root-cause analysis.
 
-(udb) explain
+(mdb) explain
 
   ✦ Claude AI Analysis
   ──────────────────────────────────────
@@ -130,10 +130,10 @@ udb ./my_program
   head = next;
   ──────────────────────────────────────
 
-(udb) reverse-step
+(mdb) reverse-step
   ◀ delete_list() at use_after_free.cpp:20
 
-(udb) info locals
+(mdb) info locals
   Locals
   ──────────────────────────────────
   head  =  0x5562a0
@@ -204,13 +204,13 @@ udb ./my_program
 and supports perfect replay. Enable it with `--rr`:
 
 ```bash
-udb ./my_program --rr
+mdb ./my_program --rr
 ```
 
 Or set the environment variable:
 ```bash
-export UDB_USE_RR=1
-udb ./my_program
+export MDB_USE_RR=1
+mdb ./my_program
 ```
 
 rr is significantly faster than GDB `record-full` for long-running programs and
@@ -223,9 +223,9 @@ supports multi-threaded recording.
 | Variable | Description |
 |---|---|
 | `ANTHROPIC_API_KEY` | API key for AI `explain` commands |
-| `UDB_USE_RR` | Set to `1` to use rr instead of GDB record-full |
-| `UDB_CONTEXT_LINES` | Number of source lines to display (default `10`) |
-| `UDB_DEBUG` | Set to `1` to log raw GDB/MI protocol traffic |
+| `MDB_USE_RR` | Set to `1` to use rr instead of GDB record-full |
+| `MDB_CONTEXT_LINES` | Number of source lines to display (default `10`) |
+| `MDB_DEBUG` | Set to `1` to log raw GDB/MI protocol traffic |
 | `NO_COLOR` | Disable ANSI colour output |
 
 ---
@@ -233,8 +233,8 @@ supports multi-threaded recording.
 ## Architecture
 
 ```
-udb-cli/
-├── udb/
+mdb/
+├── mdb/
 │   ├── __main__.py      CLI entry point & argument parsing
 │   ├── cli.py           REPL loop & command dispatch
 │   ├── session.py       Session state (owns the backend)
