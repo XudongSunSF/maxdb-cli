@@ -1,1 +1,3 @@
-anthropic>=0.25.0
+mcp>=1.0.0
+# Optional: only needed for standalone CLI `explain` command (not MCP mode)
+# anthropic>=0.25.0

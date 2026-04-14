@@ -28,6 +28,7 @@ automatically explain crashes, use-after-free bugs, buffer overflows, and more.
 | **GDB backend** | Uses GDB `record-full` for reverse debugging (no extra install) |
 | **rr backend** | Uses Mozilla `rr` for efficient, low-overhead recording |
 | **AI root-cause** | `explain` / `why` calls Claude to analyse crashes in context |
+| **MCP server** | Integrates with VS Code Copilot — no API key needed |
 | **Checkpoints** | Save and restore arbitrary execution positions |
 | **Source view** | Syntax-highlighted C++ with current-line indicator |
 | **Tab completion** | All commands completable with Tab |
@@ -40,7 +41,7 @@ automatically explain crashes, use-after-free bugs, buffer overflows, and more.
 - Python 3.11+
 - GDB 9+ (for reverse debugging via `record-full`)
 - [Mozilla rr](https://rr-project.org/) — **strongly recommended** for large projects (see below)
-- An Anthropic API key (for `explain` / `why` commands)
+- An Anthropic API key (for CLI `explain` / `why` commands) **— not needed in MCP mode**
 
 Install GDB:
 ```bash
@@ -382,11 +383,91 @@ jumps back to the previous breakpoint instantly with zero replay overhead.
 
 ---
 
+## VS Code Copilot Integration (MCP Server)
+
+mdb ships with a built-in [MCP (Model Context Protocol)](https://modelcontextprotocol.io/)
+server that lets **VS Code Copilot** (or any MCP-compatible client) drive the
+debugger directly. No `ANTHROPIC_API_KEY` required — Copilot's own LLM does
+the reasoning while mdb provides the debugging tools.
+
+### Setup
+
+**1. Install mdb with MCP support:**
+```bash
+pip install -e .
+# or just: pip install mdb
+```
+
+**2. Add to your VS Code workspace** (`.vscode/mcp.json`):
+```json
+{
+  "servers": {
+    "mdb": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["-m", "mdb.mcp_server"]
+    }
+  }
+}
+```
+
+**3. Use in Copilot agent mode.** Just ask naturally:
+
+> *"Load `./my_program`, run it, and explain why it crashes."*
+
+> *"Set a breakpoint at `delete_list`, continue to it, then step backward
+>  to find when the pointer was freed."*
+
+> *"Show me the backtrace and local variables, then reverse-step 3 times
+>  to trace how `head` became dangling."*
+
+Copilot will call mdb's tools automatically — loading the binary, setting
+breakpoints, stepping, inspecting state, and synthesising a root-cause
+analysis, all without you writing a single debugger command.
+
+### Available MCP Tools
+
+| Tool | Description |
+|---|---|
+| `mdb_load` | Load a C++ binary for debugging (GDB or rr backend) |
+| `mdb_run` | Start/restart the program under time-travel recording |
+| `mdb_step` | Step one source line (forward or **backward**) |
+| `mdb_next` | Step over a call (forward or **backward**) |
+| `mdb_continue` | Continue to next breakpoint (forward or **reverse**) |
+| `mdb_finish` | Run until function returns (or reverse to entry) |
+| `mdb_set_breakpoint` | Set breakpoint at function, file:line, or line number |
+| `mdb_set_watchpoint` | Set data watchpoint on an expression |
+| `mdb_delete_breakpoint` | Remove a breakpoint/watchpoint by ID |
+| `mdb_get_breakpoints` | List all active breakpoints/watchpoints |
+| `mdb_get_locals` | Inspect local variables in the current frame |
+| `mdb_get_args` | Inspect function arguments in the current frame |
+| `mdb_backtrace` | Get the full call stack |
+| `mdb_evaluate` | Evaluate any C++ expression (`ptr->next`, `*arr`, etc.) |
+| `mdb_select_frame` | Switch to a different stack frame |
+| `mdb_list_source` | Show source code around the current position |
+| `mdb_get_state` | Full state snapshot (best for crash analysis) |
+
+### MCP Prompt
+
+The server also provides an `analyze_crash` prompt that guides Copilot through
+a structured root-cause analysis workflow: get state → read source → evaluate
+pointers → reverse-step to trace corruption → produce a fix.
+
+### Using rr with MCP
+
+To use the rr backend instead of GDB `record-full`, ask Copilot:
+
+> *"Load `./my_program` with rr and run it."*
+
+Or pass `use_rr=True` when calling `mdb_load`.
+
+---
+
 ## Environment Variables
 
 | Variable | Description |
 |---|---|
-| `ANTHROPIC_API_KEY` | API key for AI `explain` commands |
+| `ANTHROPIC_API_KEY` | API key for CLI `explain` commands (not needed in MCP mode) |
 | `MDB_USE_RR` | Set to `1` to use rr instead of GDB record-full |
 | `MDB_CONTEXT_LINES` | Number of source lines to display (default `10`) |
 | `MDB_DEBUG` | Set to `1` to log raw GDB/MI protocol traffic |
@@ -402,16 +483,34 @@ mdb/
 │   ├── __main__.py      CLI entry point & argument parsing
 │   ├── cli.py           REPL loop & command dispatch
 │   ├── session.py       Session state (owns the backend)
-│   ├── ai.py            Claude API integration
+│   ├── ai.py            Claude API integration (standalone CLI)
+│   ├── mcp_server.py    ← MCP server for VS Code Copilot
 │   ├── display.py       Terminal rendering & syntax highlighting
 │   ├── config.py        Configuration dataclass
 │   └── backend/
 │       ├── base.py      Abstract Backend interface
 │       ├── gdb.py       GDB/MI backend (record-full)
 │       └── rr.py        Mozilla rr backend
+├── .vscode/
+│   └── mcp.json         Example MCP config for VS Code
 └── examples/
     ├── use_after_free.cpp
     └── buffer_overflow.cpp
+```
+
+Two ways to use mdb:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Option A: Standalone CLI                                   │
+│  mdb ./binary  →  REPL  →  explain  →  Anthropic API       │
+│                                         (needs API key)     │
+├─────────────────────────────────────────────────────────────┤
+│  Option B: VS Code Copilot (MCP)                            │
+│  Copilot agent  →  mcp_server.py  →  session  →  GDB/rr    │
+│  (LLM reasoning)   (tools)          (state)    (execution)  │
+│                     No API key needed!                      │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 The **backend abstraction** makes it straightforward to add new backends

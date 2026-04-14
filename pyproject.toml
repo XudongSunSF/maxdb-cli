@@ -4,8 +4,8 @@ build-backend = "setuptools.backends.legacy:build"
 
 [project]
 name        = "mdb"
-version     = "1.0.0"
-description = "MDB — MaxDebugger: Time-Travel Debugger for C++ powered by Claude AI"
+version     = "1.1.0"
+description = "MDB — MaxDebugger: Time-Travel Debugger for C++ with MCP server for VS Code Copilot"
 readme      = "README.md"
 requires-python = ">=3.11"
 
@@ -15,7 +15,7 @@ authors = [
 
 keywords = [
   "debugger", "time-travel", "gdb", "rr", "c++",
-  "reverse-debugging", "claude", "ai",
+  "reverse-debugging", "claude", "ai", "mcp", "copilot",
 ]
 
 classifiers = [
@@ -30,10 +30,13 @@ classifiers = [
 ]
 
 dependencies = [
-  "anthropic>=0.25.0",
+  "mcp>=1.0.0",
 ]
 
 [project.optional-dependencies]
+anthropic = [
+  "anthropic>=0.25.0",
+]
 dev = [
   "pytest>=8.0",
   "pytest-cov",
@@ -42,11 +45,12 @@ dev = [
 ]
 
 [project.scripts]
-mdb = "mdb.__main__:main"
+mdb     = "mdb.__main__:main"
+mdb-mcp = "mdb.mcp_server:main"
 
 [project.urls]
-Homepage   = "https://github.com/XudongSunSF/mdb"
-Issues     = "https://github.com/XudongSunSF/mdb/issues"
+Homepage   = "https://github.com/XudongSunSF/maxdb-cli"
+Issues     = "https://github.com/XudongSunSF/maxdb-cli/issues"
 
 [tool.ruff]
 line-length = 100

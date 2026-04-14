@@ -1,0 +1,10 @@
+{
+  "servers": {
+    "mdb": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["-m", "mdb.mcp_server"],
+      "env": {}
+    }
+  }
+}
