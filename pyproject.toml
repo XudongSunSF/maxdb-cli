@@ -1,0 +1,61 @@
+[build-system]
+requires      = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name        = "udb-cli"
+version     = "1.0.0"
+description = "Time-Travel Debugger CLI for C++ — powered by Claude AI"
+readme      = "README.md"
+requires-python = ">=3.11"
+
+authors = [
+  { name = "udb-cli contributors" },
+]
+
+keywords = [
+  "debugger", "time-travel", "gdb", "rr", "c++",
+  "reverse-debugging", "claude", "ai",
+]
+
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Debuggers",
+]
+
+dependencies = [
+  "anthropic>=0.25.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov",
+  "mypy",
+  "ruff",
+]
+
+[project.scripts]
+udb = "udb.__main__:main"
+
+[project.urls]
+Homepage   = "https://github.com/XudongSunSF/udb-cli"
+Issues     = "https://github.com/XudongSunSF/udb-cli/issues"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+strict         = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
