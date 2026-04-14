@@ -39,7 +39,7 @@ automatically explain crashes, use-after-free bugs, buffer overflows, and more.
 
 - Python 3.11+
 - GDB 9+ (for reverse debugging via `record-full`)
-- [Mozilla rr](https://rr-project.org/) *(optional but recommended for large projects)*
+- [Mozilla rr](https://rr-project.org/) — **strongly recommended** for large projects (see below)
 - An Anthropic API key (for `explain` / `why` commands)
 
 Install GDB:
@@ -51,13 +51,178 @@ sudo apt install gdb
 brew install gdb
 ```
 
-Install rr (optional):
+---
+
+## Installing rr — why it matters
+
+GDB's built-in `record-full` works out of the box but is unsuitable for real
+codebases. rr is the right choice for any non-trivial program:
+
+| | GDB `record-full` | Mozilla rr |
+|---|---|---|
+| Extra install | No | Yes |
+| Slowdown | 50–100× | ~1.2× |
+| Multi-threaded programs | ❌ Unreliable | ✅ Full support |
+| Large traces | Runs out of memory | Gigabytes, no problem |
+| Reverse-continue speed | Very slow | Instant |
+
+### Quick install (with sudo)
+
 ```bash
 # Ubuntu / Debian
 sudo apt install rr
 
 # macOS
 brew install rr
+
+# RHEL / CentOS (package manager)
+sudo dnf install rr
+```
+
+### Building rr from source on RHEL 8 — no sudo required
+
+If you are on a shared RHEL 8 server without root access, build rr entirely
+inside your home directory. The steps below install every dependency locally
+and place the final `rr` binary at `~/.local/bin/rr`.
+
+#### 1. Check hardware support
+
+rr requires a modern Intel or AMD CPU with hardware performance counters.
+Verify before building:
+
+```bash
+# Must print a number > 0
+grep -c 'pmu\|perf' /proc/cpuinfo
+
+# Check perf_event_paranoid — must be ≤ 1
+cat /proc/sys/kernel/perf_event_paranoid
+```
+
+If `perf_event_paranoid` is 2 or higher and you cannot change it (requires
+root), ask your sysadmin to run:
+
+```bash
+sudo sysctl -w kernel.perf_event_paranoid=1
+# Make it permanent:
+echo 'kernel.perf_event_paranoid=1' | sudo tee /etc/sysctl.d/99-rr.conf
+```
+
+#### 2. Install a local CMake (if system CMake < 3.11)
+
+```bash
+# Check version — rr needs 3.11+
+cmake --version
+
+# If too old, install a local copy:
+cd ~
+wget https://github.com/Kitware/CMake/releases/download/v3.29.3/cmake-3.29.3-linux-x86_64.tar.gz
+tar -xf cmake-3.29.3-linux-x86_64.tar.gz
+export PATH="$HOME/cmake-3.29.3-linux-x86_64/bin:$PATH"
+# Add to ~/.bashrc to persist:
+echo 'export PATH="$HOME/cmake-3.29.3-linux-x86_64/bin:$PATH"' >> ~/.bashrc
+```
+
+#### 3. Install capnproto locally (rr dependency)
+
+rr requires [Cap'n Proto](https://capnproto.org/) 0.9+. Build it from source
+into `~/.local`:
+
+```bash
+cd ~
+wget https://capnproto.org/capnproto-c++-1.0.2.tar.gz
+tar -xf capnproto-c++-1.0.2.tar.gz
+cd capnproto-c++-1.0.2
+
+./configure --prefix=$HOME/.local
+make -j$(nproc)
+make install
+
+# Make the compiler and pkg-config find it:
+export PKG_CONFIG_PATH="$HOME/.local/lib/pkgconfig:$PKG_CONFIG_PATH"
+export PATH="$HOME/.local/bin:$PATH"
+echo 'export PKG_CONFIG_PATH="$HOME/.local/lib/pkgconfig:$PKG_CONFIG_PATH"' >> ~/.bashrc
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+```
+
+#### 4. Install zstd locally (optional but recommended)
+
+```bash
+cd ~
+wget https://github.com/facebook/zstd/releases/download/v1.5.6/zstd-1.5.6.tar.gz
+tar -xf zstd-1.5.6.tar.gz
+cd zstd-1.5.6/build/cmake
+
+cmake -DCMAKE_INSTALL_PREFIX=$HOME/.local \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DZSTD_BUILD_PROGRAMS=OFF .
+make -j$(nproc)
+make install
+```
+
+#### 5. Build rr itself
+
+```bash
+cd ~
+git clone https://github.com/rr-debugger/rr.git
+cd rr
+mkdir build && cd build
+
+cmake .. \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX=$HOME/.local \
+  -DCapnProto_DIR=$HOME/.local/lib/cmake/CapnProto \
+  -DCMAKE_PREFIX_PATH=$HOME/.local
+
+make -j$(nproc)
+make install
+```
+
+#### 6. Verify the install
+
+```bash
+# Should print rr version
+~/.local/bin/rr --version
+
+# If ~/.local/bin is already in your PATH (step 3 above), just:
+rr --version
+
+# Quick smoke test — record and replay ls
+rr record ls
+rr replay
+```
+
+#### 7. Tell mdb to use your local rr
+
+```bash
+# If ~/.local/bin is in PATH, --rr just works:
+mdb ./my_binary --rr
+
+# Or point explicitly to the binary:
+RR=/home/yourname/.local/bin/rr mdb ./my_binary --rr
+```
+
+#### Troubleshooting
+
+**`CPUID faulting` error on VM** — rr needs bare-metal CPU features. If you are
+inside a VM, ask your admin to enable CPU passthrough / hardware virtualisation
+extensions.
+
+**`perf_event_open` permission denied** — `perf_event_paranoid` is too high.
+You need your sysadmin to set it to 1 (see step 1 above).
+
+**`capnp: not found` during cmake** — re-run step 3 and make sure
+`PKG_CONFIG_PATH` is exported in your current shell before running cmake.
+
+**Old GCC on RHEL 8** — rr requires GCC 7+ or Clang 6+. Enable the SCL
+toolset if needed:
+
+```bash
+# Install (requires sudo — ask sysadmin once)
+sudo dnf install gcc-toolset-13
+
+# Then in your build shell (no sudo needed after install):
+scl enable gcc-toolset-13 bash
+# Now rebuild rr inside this shell
 ```
 
 ---
@@ -198,23 +363,22 @@ mdb ./my_program
 
 ---
 
-## Using rr (recommended for large projects)
+## Using rr with mdb
 
-[Mozilla rr](https://rr-project.org/) records execution with very low overhead
-and supports perfect replay. Enable it with `--rr`:
+Once rr is installed (see above), enable it with `--rr`:
 
 ```bash
 mdb ./my_program --rr
 ```
 
-Or set the environment variable:
+Or set the environment variable permanently:
 ```bash
 export MDB_USE_RR=1
 mdb ./my_program
 ```
 
-rr is significantly faster than GDB `record-full` for long-running programs and
-supports multi-threaded recording.
+Inside the session, reverse commands run at full speed — `reverse-continue`
+jumps back to the previous breakpoint instantly with zero replay overhead.
 
 ---
 
